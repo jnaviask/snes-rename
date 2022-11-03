@@ -1,9 +1,10 @@
 #!/bin/bash
 extract-songs() {
-  for f in ./*.rsm
+  for f in ./*.rsn
   do
       mkdir "${f%.rsn}"
       unrar e "$f" "${f%.rsn}/"
+      rm -f "$f"
   done
 }
 
@@ -13,10 +14,15 @@ rename-folders() {
     if [ -d "${D}" ]; then
       files=($D/*.spc)
       f="${files[0]}"
-      sng=$(java -jar spctag/spctag.jar "$f" | grep "Game title" | sed 's/Game title\: //')
-      rootdn=$(dirname ${D})
-      echo "${rootdn}/${sng}"
-      mv "${D}" "${rootdn}/${sng}"
+
+      # Ensure we only rename folders containing music
+      if [[ "$f" ]]; then
+        # final substitution fixes games like "Ranma 1/2", which are invalid file names
+        sng=$(java -jar spctag/spctag.jar "$f" | grep "Game title" | sed 's/Game title\: //' | sed 's/\//_/g')
+        rootdn=$(dirname ${D})
+        echo "${rootdn}/${sng}"
+        mv "${D}" "${rootdn}/${sng}"
+      fi
     fi
   done
 }
@@ -24,16 +30,20 @@ rename-folders() {
 rename-songs() {
   for f in ./**/*.spc
   do
-    dn=$(dirname $f)
-    fn=$(basename $f .spc)
-    nn=$(echo "$fn" | sed -e 's/.*-//')
+    dn=$(dirname "$f")
+    fn=$(basename "$f" ".spc")
     sng=$(java -jar spctag/spctag.jar -v "$f" | grep "Song title" | sed 's/Song title\: //')
-    newf="${dn}/${nn} - ${sng}.spc"
-    echo "${newf}"
-    mv "$f" "${newf}"
+
+    # Ensure we don't clobber already renamed files
+    if [[ $fn != *$sng* ]]; then
+      nn=$(echo "$fn" | sed -e 's/.*-//')
+      newf="${dn}/${nn} - ${sng}.spc"
+      echo "${newf}"
+      mv "$f" "${newf}"
+    fi
   done
 }
 
-extract-songs()
-rename-folders()
-rename-songs()
+extract-songs
+rename-folders
+rename-songs
