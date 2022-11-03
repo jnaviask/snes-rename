@@ -51,6 +51,6 @@ rename-songs() {
   done
 }
 
-#extract-songs
-#rename-folders
+extract-songs
+rename-folders
 rename-songs
