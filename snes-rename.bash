@@ -37,13 +37,20 @@ rename-songs() {
     # Ensure we don't clobber already renamed files
     if [[ $fn != *$sng* ]]; then
       nn=$(echo "$fn" | sed -e 's/.*-//')
-      newf="${dn}/${nn} - ${sng}.spc"
-      echo "${newf}"
-      mv "$f" "${newf}"
+      if [[ "$nn" ]]; then
+        newf="${dn}/${nn} - ${sng}.spc"
+        echo "${newf}"
+        mv "$f" "${newf}"
+      else
+        # handle names without track numbers, like "Unused"
+        newf="${dn}/${sng}.spc"
+        echo "${newf}"
+        mv "$f" "${newf}"
+      fi
     fi
   done
 }
 
-extract-songs
-rename-folders
+#extract-songs
+#rename-folders
 rename-songs
